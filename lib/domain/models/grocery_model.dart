@@ -1,7 +1,7 @@
-import 'package:shopping_list/models/category.dart';
+import 'package:shopping_list/domain/models/category_model.dart';
 
-class GroceryItem {
-  const GroceryItem({
+class GroceryModel {
+  const GroceryModel({
     required this.id,
     required this.name,
     required this.quantity,
@@ -10,5 +10,5 @@ class GroceryItem {
 
   final String id, name;
   final int quantity;
-  final Category category;
+  final CategoryModel category;
 }

@@ -1,21 +1,21 @@
-import 'package:shopping_list/model/category.dart';
-import 'package:shopping_list/models/grocery_item.dart';
 import 'package:shopping_list/data/categories.dart';
+import 'package:shopping_list/domain/models/category_model.dart';
+import 'package:shopping_list/domain/models/grocery_model.dart';
 
 final groceryItems = [
-  GroceryItem(
+  GroceryModel(
     id: 'a',
     name: 'Milk',
     quantity: 1,
     category: categories[Categories.dairy]!,
   ),
-  GroceryItem(
+  GroceryModel(
     id: 'b',
     name: 'Bananas',
     quantity: 5,
     category: categories[Categories.fruit]!,
   ),
-  GroceryItem(
+  GroceryModel(
     id: 'c',
     name: 'Beef Steak',
     quantity: 1,
