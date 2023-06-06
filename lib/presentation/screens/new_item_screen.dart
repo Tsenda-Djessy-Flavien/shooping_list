@@ -27,7 +27,14 @@ class _NewItemScreenState extends State<NewItemScreen> {
                   label: Text('Name'),
                 ),
                 validator: (value) {
-                  return 'Demo...';
+                  // value -> cette value sera fournie par flutter lors de l'execution de la fnc
+                  if (value == null ||
+                      value.isEmpty ||
+                      value.trim().length <= 1 ||
+                      value.trim().length == 50) {
+                    return "Must be between 1 and 50 caractères.";
+                  }
+                  return null; // if le champ à été bien rempli
                 },
               ),
               Row(
@@ -38,6 +45,16 @@ class _NewItemScreenState extends State<NewItemScreen> {
                       decoration:
                           const InputDecoration(label: Text('Quantity')),
                       initialValue: '1',
+                      validator: (value) {
+                        //  int.tryParse -> convertir la value en nombre
+                        if (value == null ||
+                            value.isEmpty ||
+                            int.tryParse(value) == null ||
+                            int.tryParse(value)! <= 0) {
+                          return "Must be valid, positive number.";
+                        }
+                        return null;
+                      },
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -64,7 +81,21 @@ class _NewItemScreenState extends State<NewItemScreen> {
                     ),
                   ),
                 ],
-              )
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text('Reset'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {},
+                    child: const Text('Add Item'),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
