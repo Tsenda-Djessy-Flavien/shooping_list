@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
+import 'package:shopping_list/domain/models/category_model.dart';
 
 class NewItemScreen extends StatefulWidget {
   const NewItemScreen({super.key});
@@ -12,9 +13,17 @@ class _NewItemScreenState extends State<NewItemScreen> {
   // verification supplementaire des types
   // et des suggestions d'autocompletion
   final _formKey = GlobalKey<FormState>();
+  var _enteredName = '';
+  var _enteredQuantity = 1;
+  var _selectedCategory = categories[Categories.fruit]!;
 
   void _saveItem() {
-    _formKey.currentState!.validate();
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      print(_enteredName);
+      print(_enteredQuantity);
+      print(_selectedCategory);
+    }
   }
 
   @override
@@ -46,15 +55,19 @@ class _NewItemScreenState extends State<NewItemScreen> {
                   }
                   return null; // if le champ à été bien rempli
                 },
+                onSaved: (newValue) {
+                  _enteredName = newValue!;
+                },
               ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextFormField(
+                      keyboardType: TextInputType.number,
                       decoration:
                           const InputDecoration(label: Text('Quantity')),
-                      initialValue: '1',
+                      initialValue: _enteredQuantity.toString(),
                       validator: (value) {
                         //  int.tryParse -> convertir la value en nombre
                         if (value == null ||
@@ -65,11 +78,15 @@ class _NewItemScreenState extends State<NewItemScreen> {
                         }
                         return null;
                       },
+                      onSaved: (newValue) {
+                        _enteredQuantity = int.parse(newValue!);
+                      },
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: DropdownButtonFormField(
+                      value: _selectedCategory,
                       items: [
                         for (final category in categories.entries)
                           DropdownMenuItem(
@@ -87,7 +104,11 @@ class _NewItemScreenState extends State<NewItemScreen> {
                             ),
                           )
                       ],
-                      onChanged: (newVaule) {},
+                      onChanged: (newVaule) {
+                        setState(() {
+                          _selectedCategory = newVaule!;
+                        });
+                      },
                     ),
                   ),
                 ],
