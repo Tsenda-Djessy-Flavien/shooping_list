@@ -21,7 +21,7 @@ class _NewItemScreenState extends State<NewItemScreen> {
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.fruit]!;
 
-  void _saveItem() {
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       // print(_enteredName);
@@ -32,7 +32,8 @@ class _NewItemScreenState extends State<NewItemScreen> {
         'flutter-prep-ca082-default-rtdb.firebaseio.com',
         'shooping-list.json',
       );
-      http.post(
+
+      final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json', // the data will be formatted
@@ -45,6 +46,15 @@ class _NewItemScreenState extends State<NewItemScreen> {
           'category': _selectedCategory.label,
         }),
       );
+
+      print(response.body);
+      print(response.statusCode);
+
+      if (!context.mounted) {
+        return;
+      }
+      // ce code sera executé si le context existe (est monté)
+      Navigator.of(context).pop();
 
       // Navigator.of(context).pop(
       //   GroceryModel(
