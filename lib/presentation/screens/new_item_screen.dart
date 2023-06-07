@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/domain/models/category_model.dart';
-import 'package:shopping_list/domain/models/grocery_model.dart';
+// import 'package:shopping_list/domain/models/grocery_model.dart';
 
 class NewItemScreen extends StatefulWidget {
   const NewItemScreen({super.key});
@@ -24,14 +27,33 @@ class _NewItemScreenState extends State<NewItemScreen> {
       // print(_enteredName);
       // print(_enteredQuantity);
       // print(_selectedCategory);
-      Navigator.of(context).pop(
-        GroceryModel(
-          id: DateTime.now().toString(),
-          name: _enteredName,
-          quantity: _enteredQuantity,
-          category: _selectedCategory,
-        ),
+
+      final url = Uri.https(
+        'flutter-prep-ca082-default-rtdb.firebaseio.com',
+        'shooping-list.json',
       );
+      http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json', // the data will be formatted
+        },
+        // convertir la data en text formaté Json
+        body: json.encode({
+          // 'id': DateTime.now().toString(), // generer par firebase
+          'name': _enteredName,
+          'quantity': _enteredQuantity,
+          'category': _selectedCategory.label,
+        }),
+      );
+
+      // Navigator.of(context).pop(
+      //   GroceryModel(
+      //     id: DateTime.now().toString(),
+      //     name: _enteredName,
+      //     quantity: _enteredQuantity,
+      //     category: _selectedCategory,
+      //   ),
+      // );
     }
   }
 
