@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/domain/models/category_model.dart';
+import 'package:shopping_list/domain/models/grocery_model.dart';
 // import 'package:shopping_list/domain/models/grocery_model.dart';
 
 class NewItemScreen extends StatefulWidget {
@@ -50,11 +51,20 @@ class _NewItemScreenState extends State<NewItemScreen> {
       print(response.body);
       print(response.statusCode);
 
+      final Map<String, dynamic> resData = json.decode(response.body);
+
       if (!context.mounted) {
         return;
       }
       // ce code sera executé si le context existe (est monté)
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(
+        GroceryModel(
+          id: resData['name'],
+          name: _enteredName,
+          quantity: _enteredQuantity,
+          category: _selectedCategory,
+        ),
+      );
 
       // Navigator.of(context).pop(
       //   GroceryModel(
