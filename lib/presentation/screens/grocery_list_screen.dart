@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shopping_list/data/categories.dart';
 // import 'package:shopping_list/data/dummy_items.dart';
 import 'package:shopping_list/domain/models/grocery_model.dart';
 import 'package:shopping_list/presentation/screens/new_item_screen.dart';
@@ -12,20 +16,69 @@ class GroceryListScreen extends StatefulWidget {
 }
 
 class _GroceryListScreenState extends State<GroceryListScreen> {
-  final List<GroceryModel> _groceryItems = [];
+  List<GroceryModel> _groceryItems = [];
 
-  void _addItem() async {
-    final newItem = await Navigator.of(context).push<GroceryModel>(
-      MaterialPageRoute(builder: (ctx) => const NewItemScreen()),
+  @override
+  void initState() {
+    _loadItem();
+    super.initState();
+  }
+
+  void _loadItem() async {
+    final url = Uri.https(
+      'flutter-prep-ca082-default-rtdb.firebaseio.com',
+      'shooping-list.json',
     );
+    // fetching data
+    final response = await http.get(url);
+    // check data type
+    print(response.body);
+    // convert data to Dart object
+    final Map<String, dynamic> listData = json.decode(response.body);
+    // stocker data
+    final List<GroceryModel> listGroceryItem = [];
 
-    if (newItem == null) {
-      return;
+    for (final item in listData.entries) {
+      // dans le backend on a juste stocker le label,
+      // or la categories est constitué du label et de la color
+      // d'ou en compare le label de la categories s'il est égale au label stocker dans le backend
+      // si c'est true il return la categories complet (label, color)
+      final category = categories.entries
+          .firstWhere(
+            (catItem) => catItem.value.label == item.value['category'],
+          )
+          .value;
+
+      listGroceryItem.add(
+        GroceryModel(
+          id: item.key,
+          name: item.value['name'],
+          quantity: item.value['quantity'],
+          category: category,
+        ),
+      );
     }
 
     setState(() {
-      _groceryItems.add(newItem);
+      _groceryItems = listGroceryItem;
     });
+  }
+
+  void _addItem() async {
+    // final newItem =
+    await Navigator.of(context).push<GroceryModel>(
+      MaterialPageRoute(builder: (ctx) => const NewItemScreen()),
+    );
+
+    _loadItem();
+
+    // if (newItem == null) {
+    //   return;
+    // }
+
+    // setState(() {
+    //   _groceryItems.add(newItem);
+    // });
   }
 
   void _onRemoveItem(GroceryModel groceryItem) {
