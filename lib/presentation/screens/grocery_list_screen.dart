@@ -17,6 +17,7 @@ class GroceryListScreen extends StatefulWidget {
 
 class _GroceryListScreenState extends State<GroceryListScreen> {
   List<GroceryModel> _groceryItems = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -61,6 +62,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
 
     setState(() {
       _groceryItems = listGroceryItem;
+      _isLoading = false;
     });
   }
 
@@ -106,6 +108,12 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     Widget buildMain = const Center(
       child: Text('No items added yet.'),
     );
+
+    if (_isLoading) {
+      buildMain = const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
 
     if (_groceryItems.isNotEmpty) {
       buildMain = ListView.builder(
