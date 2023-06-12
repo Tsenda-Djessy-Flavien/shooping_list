@@ -18,6 +18,7 @@ class GroceryListScreen extends StatefulWidget {
 class _GroceryListScreenState extends State<GroceryListScreen> {
   List<GroceryModel> _groceryItems = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -32,6 +33,12 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     );
     // fetching data
     final response = await http.get(url);
+    // checker si la request c'est bien passé
+    if (response.statusCode >= 400) {
+      setState(() {
+        _error = 'Failed to fetch data, Please try again later.';
+      });
+    }
     // check data type
     print(response.body);
     // convert data to Dart object
@@ -134,6 +141,10 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
           },
         ),
       );
+    }
+
+    if (_error != null) {
+      buildMain = Center(child: Text(_error!));
     }
 
     return Scaffold(
