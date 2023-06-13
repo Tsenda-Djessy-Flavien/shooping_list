@@ -41,6 +41,15 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     }
     // check data type
     print(response.body);
+
+    // data is missing to backend
+    if (response.body == 'null') {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     // convert data to Dart object
     final Map<String, dynamic> listData = json.decode(response.body);
     // stocker data
