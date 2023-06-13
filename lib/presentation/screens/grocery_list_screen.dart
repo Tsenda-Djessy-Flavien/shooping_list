@@ -31,55 +31,62 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
       'flutter-prep-ca082-default-rtdb.firebaseio.com',
       'shooping-list.json',
     );
-    // fetching data
-    final response = await http.get(url);
-    // checker si la request c'est bien passé
-    if (response.statusCode >= 400) {
-      setState(() {
-        _error = 'Failed to fetch data, Please try again later.';
-      });
-    }
-    // check data type
-    print(response.body);
 
-    // data is missing to backend
-    if (response.body == 'null') {
+    try {
+      // fetching data
+      final response = await http.get(url);
+      // checker si la request c'est bien passé
+      if (response.statusCode >= 400) {
+        setState(() {
+          _error = 'Failed to fetch data, Please try again later.';
+        });
+      }
+      // check data type
+      print(response.body);
+
+      // data is missing to backend
+      if (response.body == 'null') {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // convert data to Dart object
+      final Map<String, dynamic> listData = json.decode(response.body);
+      // stocker data
+      final List<GroceryModel> listGroceryItem = [];
+
+      for (final item in listData.entries) {
+        // dans le backend on a juste stocker le label,
+        // or la categories est constitué du label et de la color
+        // d'ou en compare le label de la categories s'il est égale au label stocker dans le backend
+        // si c'est true il return la categories complet (label, color)
+        final category = categories.entries
+            .firstWhere(
+              (catItem) => catItem.value.label == item.value['category'],
+            )
+            .value;
+
+        listGroceryItem.add(
+          GroceryModel(
+            id: item.key,
+            name: item.value['name'],
+            quantity: item.value['quantity'],
+            category: category,
+          ),
+        );
+      }
+
       setState(() {
+        _groceryItems = listGroceryItem;
         _isLoading = false;
       });
-      return;
+    } catch (e) {
+      setState(() {
+        _error = 'Something went wrong, Please Try again later.';
+      });
     }
-
-    // convert data to Dart object
-    final Map<String, dynamic> listData = json.decode(response.body);
-    // stocker data
-    final List<GroceryModel> listGroceryItem = [];
-
-    for (final item in listData.entries) {
-      // dans le backend on a juste stocker le label,
-      // or la categories est constitué du label et de la color
-      // d'ou en compare le label de la categories s'il est égale au label stocker dans le backend
-      // si c'est true il return la categories complet (label, color)
-      final category = categories.entries
-          .firstWhere(
-            (catItem) => catItem.value.label == item.value['category'],
-          )
-          .value;
-
-      listGroceryItem.add(
-        GroceryModel(
-          id: item.key,
-          name: item.value['name'],
-          quantity: item.value['quantity'],
-          category: category,
-        ),
-      );
-    }
-
-    setState(() {
-      _groceryItems = listGroceryItem;
-      _isLoading = false;
-    });
   }
 
   void _addItem() async {
