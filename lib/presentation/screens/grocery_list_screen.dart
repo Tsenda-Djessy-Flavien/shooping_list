@@ -87,26 +87,28 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     });
   }
 
-  void _onRemoveItem(GroceryModel groceryItem) {
-    final checkGroceryItem = _groceryItems.contains(groceryItem);
-    if (checkGroceryItem) {
+  void _onRemoveItem(GroceryModel groceryItem) async {
+    final index = _groceryItems.indexOf(groceryItem);
+
+    setState(() {
+      _groceryItems.remove(groceryItem);
+    });
+
+    final url = Uri.https(
+      'flutter-prep-ca082-default-rtdb.firebaseio.com',
+      'shooping-list/${groceryItem.id}.json',
+    );
+
+    final response = await http.delete(url);
+
+    if (response.statusCode >= 400) {
       setState(() {
-        _groceryItems.remove(groceryItem);
+        const snackBar = SnackBar(
+          content: Text('An error has occurred'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        _groceryItems.insert(index, groceryItem);
       });
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('delete'),
-          action: SnackBarAction(
-            label: 'undo',
-            onPressed: () {
-              setState(() {
-                _groceryItems.add(groceryItem);
-              });
-            },
-          ),
-        ),
-      );
     }
   }
 
