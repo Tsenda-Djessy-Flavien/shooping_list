@@ -16,77 +16,60 @@ class GroceryListScreen extends StatefulWidget {
 }
 
 class _GroceryListScreenState extends State<GroceryListScreen> {
-  List<GroceryModel> _groceryItems = [];
-  bool _isLoading = true;
-  String? _error;
+  final List<GroceryModel> _groceryItems = [];
+  // late -> pas de initial mais il aura une valeur quand il sera utilisé pour la première fois
+  late Future<List<GroceryModel>> _loadedItems;
 
   @override
   void initState() {
-    _loadItem();
     super.initState();
+    _loadedItems = _loadItem();
   }
 
-  void _loadItem() async {
+  Future<List<GroceryModel>> _loadItem() async {
     final url = Uri.https(
       'flutter-prep-ca082-default-rtdb.firebaseio.com',
       'shooping-list.json',
     );
-
-    try {
-      // fetching data
-      final response = await http.get(url);
-      // checker si la request c'est bien passé
-      if (response.statusCode >= 400) {
-        setState(() {
-          _error = 'Failed to fetch data, Please try again later.';
-        });
-      }
-      // check data type
-      print(response.body);
-
-      // data is missing to backend
-      if (response.body == 'null') {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // convert data to Dart object
-      final Map<String, dynamic> listData = json.decode(response.body);
-      // stocker data
-      final List<GroceryModel> listGroceryItem = [];
-
-      for (final item in listData.entries) {
-        // dans le backend on a juste stocker le label,
-        // or la categories est constitué du label et de la color
-        // d'ou en compare le label de la categories s'il est égale au label stocker dans le backend
-        // si c'est true il return la categories complet (label, color)
-        final category = categories.entries
-            .firstWhere(
-              (catItem) => catItem.value.label == item.value['category'],
-            )
-            .value;
-
-        listGroceryItem.add(
-          GroceryModel(
-            id: item.key,
-            name: item.value['name'],
-            quantity: item.value['quantity'],
-            category: category,
-          ),
-        );
-      }
-
-      setState(() {
-        _groceryItems = listGroceryItem;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Something went wrong, Please Try again later.';
-      });
+    // fetching data
+    final response = await http.get(url);
+    // checker si la request c'est bien passé
+    if (response.statusCode >= 400) {
+      throw Exception('Failed to fetch grocery items. Please try again later.');
     }
+    // check data type
+    print(response.body);
+    // data is missing to backend
+    if (response.body == 'null') {
+      return [];
+    }
+    // convert data to Dart object
+    final Map<String, dynamic> listData = json.decode(response.body);
+    // stocker data
+    final List<GroceryModel> listGroceryItem = [];
+    // display data
+    for (final item in listData.entries) {
+      // dans le backend on a juste stocker le label,
+      // or la categories est constitué du label et de la color
+      // d'ou en compare le label de la categories s'il est égale au label stocker dans le backend
+      // si c'est true il return la categories complet (label, color)
+      final category = categories.entries
+          .firstWhere(
+            (catItem) => catItem.value.label == item.value['category'],
+          )
+          .value;
+
+      listGroceryItem.add(
+        GroceryModel(
+          id: item.key,
+          name: item.value['name'],
+          quantity: item.value['quantity'],
+          category: category,
+        ),
+      );
+    }
+
+    return listGroceryItem;
   }
 
   void _addItem() async {
@@ -130,47 +113,44 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget buildMain = const Center(
-      child: Text('No items added yet.'),
-    );
-
-    if (_isLoading) {
-      buildMain = const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (_groceryItems.isNotEmpty) {
-      buildMain = ListView.builder(
-        itemCount: _groceryItems.length,
-        itemBuilder: (context, index) => Dismissible(
-          key: ValueKey(_groceryItems[index].id),
-          background: Container(
-            color: Theme.of(context).colorScheme.error.withOpacity(0.75),
-            margin: Theme.of(context).cardTheme.margin,
-          ),
-          child: GroceryItem(
-            color: _groceryItems[index].category.color,
-            title: _groceryItems[index].name,
-            quantity: '${_groceryItems[index].quantity}',
-          ),
-          onDismissed: (direction) {
-            _onRemoveItem(_groceryItems[index]);
-          },
-        ),
-      );
-    }
-
-    if (_error != null) {
-      buildMain = Center(child: Text(_error!));
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Groceries'),
         actions: [IconButton(onPressed: _addItem, icon: const Icon(Icons.add))],
       ),
-      body: buildMain,
+      body: FutureBuilder(
+        future: _loadedItems,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text(snapshot.error.toString()));
+          }
+          if (snapshot.data!.isEmpty) {
+            return const Text('No items added yet.');
+          }
+
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) => Dismissible(
+              key: ValueKey(snapshot.data![index].id),
+              background: Container(
+                color: Theme.of(context).colorScheme.error.withOpacity(0.75),
+                margin: Theme.of(context).cardTheme.margin,
+              ),
+              child: GroceryItem(
+                color: snapshot.data![index].category.color,
+                title: snapshot.data![index].name,
+                quantity: '${snapshot.data![index].quantity}',
+              ),
+              onDismissed: (direction) {
+                _onRemoveItem(snapshot.data![index]);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
